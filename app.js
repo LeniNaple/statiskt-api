@@ -16,8 +16,10 @@ app.use(bodyParser.json())
 
 // ROUTES
 //Products
-const productsController = require('./controllers/productsController')
-app.use('/api/products', productsController)
+
+// const productsController = require('./controllers/productsController')
+// app.use('/api/products', productsController)
+app.use('/api/products', require('./controllers/productsController'))
 
 //Users
 const usersController = require('./controllers/usersController')
