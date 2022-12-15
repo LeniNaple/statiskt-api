@@ -1,9 +1,11 @@
+const { application } = require('express')
 const express = require('express')
+const { set } = require('mongoose')
 const controller = express.Router()
 
 const productSchema = require('../schemas/productSchemas')
 
-// Unsecured 
+// Open routes
 controller.route('/').get(async (req, res) => {
     const products = []
     const list = await productSchema.find()
@@ -84,7 +86,64 @@ controller.route('/product/details/:articleNumber').get(async (req, res) => {
     } else {
         res.status(404).json()
     }
+}) 
+
+// Closed routes
+controller.route('/').post(async (req, res) => {
+    const { name, description, rating, price, category, tag, imageName } = req.body
+
+    if (!name || !price ) {
+        res.status(400).json({text: 'Name and price is required'})
+    }
+    const item_exists = await productSchema.findOne({name})
+    if (item_exists) {
+        res.status(409).json({text: 'A product with this name already exist'})
+    } else {
+        const product = await productSchema.create({
+            name, 
+            description, 
+            rating, 
+            price, 
+            category, 
+            tag, 
+            imageName
+        })
+        if (product){
+            res.status(201).json({text: `Product with article number ${product._id} was created.`})
+        } else {
+            res.status(400).json({text: 'Something went wrong'})
+        }
+    }
 })
 
+controller.route('/delete/:articleNumber').delete(async (req, res) => {
+    if (!req.params.articleNumber) {
+        res.status(400).json({text: `No article number was specified.`})
+    } else {
+        const item = await productSchema.findById(req.params.articleNumber)
+        if (item) {
+           await productSchema.remove(item)
+           res.status(200).json({text: `Product with article number ${req.params.articleNumber} was deleted.`})
+        } else {
+            res.status(404).json({text: `Product with article number ${req.params.articleNumber} wasnt found.`})
+        }
+    }
+})
 
+controller.get('test/:articleNumber', async (req, res) => {
+    const { articleNumber } = await req.params.articleNumber
+    const { name } = req.body.name
+    console.log(articleNumber, name)
+
+    // const product = productSchema.findById({articleNumber})
+    // if (!product) {
+    //     console.log(articleNumber)
+    // } else {
+    //     console.log(product.name, articleNumber)
+    // }
+}) 
+
+   
+  
+ 
 module.exports = controller
