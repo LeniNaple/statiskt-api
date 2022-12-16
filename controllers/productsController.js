@@ -5,7 +5,7 @@ const controller = express.Router()
 
 const productSchema = require('../schemas/productSchemas')
 
-// Open routes
+// Take all products
 controller.route('/').get(async (req, res) => {
     const products = []
     const list = await productSchema.find()
@@ -19,6 +19,7 @@ controller.route('/').get(async (req, res) => {
                 price: product.price,
                 category: product.category,
                 tag: product.tag,
+                oldPrice: product.oldPrice,
                 imageName: product.imageName
             })
         }
@@ -28,6 +29,7 @@ controller.route('/').get(async (req, res) => {
     }
 })
 
+// Take products by tag
 controller.route('/:tag').get(async (req, res) => {
     const products = []
     const list = await productSchema.find({tag: req.params.tag })
@@ -41,6 +43,7 @@ controller.route('/:tag').get(async (req, res) => {
                 price: product.price,
                 category: product.category,
                 tag: product.tag,
+                oldPrice: product.oldPrice,
                 imageName: product.imageName
             })
         }
@@ -50,6 +53,7 @@ controller.route('/:tag').get(async (req, res) => {
     }
 })
 
+// Take certain number of products by tag
 controller.route('/:tag/:take').get(async (req, res) => {
     const products = []
     const list = await productSchema.find({tag: req.params.tag }).limit(req.params.take)
@@ -63,6 +67,7 @@ controller.route('/:tag/:take').get(async (req, res) => {
                 price: product.price,
                 category: product.category,
                 tag: product.tag,
+                oldPrice: product.oldPrice,
                 imageName: product.imageName
             })
         }
@@ -72,6 +77,7 @@ controller.route('/:tag/:take').get(async (req, res) => {
     }
 })
 
+// Take specific product
 controller.route('/product/details/:articleNumber').get(async (req, res) => {
     const product = await productSchema.findById(req.params.articleNumber)
     if (product) {
@@ -82,15 +88,18 @@ controller.route('/product/details/:articleNumber').get(async (req, res) => {
             price: product.price,
             category: product.category,
             tag: product.tag,
+            oldPrice: product.oldPrice,
             imageName: product.imageName})
     } else {
         res.status(404).json()
     }
 }) 
 
-// Closed routes
+
+
+// Create a product
 controller.route('/').post(async (req, res) => {
-    const { name, description, rating, price, category, tag, imageName } = req.body
+    const { name, description, rating, price, category, tag, oldPrice, imageName } = req.body
 
     if (!name || !price ) {
         res.status(400).json({text: 'Name and price is required'})
@@ -106,6 +115,7 @@ controller.route('/').post(async (req, res) => {
             price, 
             category, 
             tag, 
+            oldPrice, 
             imageName
         })
         if (product){
@@ -116,6 +126,7 @@ controller.route('/').post(async (req, res) => {
     }
 })
 
+// Delete a product
 controller.route('/delete/:articleNumber').delete(async (req, res) => {
     if (!req.params.articleNumber) {
         res.status(400).json({text: `No article number was specified.`})
@@ -130,20 +141,48 @@ controller.route('/delete/:articleNumber').delete(async (req, res) => {
     }
 })
 
-controller.get('test/:articleNumber', async (req, res) => {
-    const { articleNumber } = await req.params.articleNumber
-    const { name } = req.body.name
-    console.log(articleNumber, name)
-
-    // const product = productSchema.findById({articleNumber})
-    // if (!product) {
-    //     console.log(articleNumber)
-    // } else {
-    //     console.log(product.name, articleNumber)
-    // }
-}) 
-
-   
+// Update a product
+controller.route('/patch/:articleNumber').patch(async (req, res) => {
+    if (!req.params.articleNumber) {
+        res.status(400).json({text: `No article number was specified.`})
+    } else {
+        await productSchema.updateOne(
+            { _id: req.params.articleNumber},
+            { $set: {name: req.body.name}
+        });
+        await productSchema.updateOne(
+            { _id: req.params.articleNumber},
+            { $set: {description: req.body.description}
+        });
+        await productSchema.updateOne(
+            { _id: req.params.articleNumber},
+            { $set: {rating: req.body.rating}
+        });
+        await productSchema.updateOne(
+            { _id: req.params.articleNumber},
+            { $set: {price: req.body.price}
+        });
+        await productSchema.updateOne(
+            { _id: req.params.articleNumber},
+            { $set: {category: req.body.category}
+        });
+        await productSchema.updateOne(
+            { _id: req.params.articleNumber},
+            { $set: {tag: req.body.tag}
+        });
+        await productSchema.updateOne(
+            { _id: req.params.articleNumber},
+            { $set: {oldPrice: req.body.oldPrice}
+        });
+        await productSchema.updateOne(
+            { _id: req.params.articleNumber},
+            { $set: {imageName: req.body.imageName}
+        });
+        res.status(200).json({text: `Updated name: ${req.body.name} ...`})    
+    }
+})
   
+  
+
  
 module.exports = controller
