@@ -142,7 +142,7 @@ controller.route('/delete/:articleNumber').delete(async (req, res) => {
 })
 
 // Update a product
-controller.route('/patch/:articleNumber').patch(async (req, res) => {
+controller.route('/patch/:articleNumber').put(async (req, res) => {
     if (!req.params.articleNumber) {
         res.status(400).json({text: `No article number was specified.`})
     } else {
